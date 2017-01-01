@@ -347,6 +347,7 @@ public:
     eKindRunToAddress,
     eKindStepThrough,
     eKindStepUntil,
+      eKindGotoUser,
     eKindTestCondition
 
   } ThreadPlanKind;

@@ -770,6 +770,8 @@
 		6D99A3631BBC2F3200979793 /* ArmUnwindInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D99A3621BBC2F3200979793 /* ArmUnwindInfo.cpp */; };
 		6D9AB3DD1BB2B74E003F2289 /* TypeMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D9AB3DC1BB2B74E003F2289 /* TypeMap.cpp */; };
 		6DEC6F391BD66D750091ABA6 /* TaskPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6DEC6F381BD66D750091ABA6 /* TaskPool.cpp */; };
+		8B78E5261E18AFD200E2CB09 /* ThreadPlanGotoUser.cpp in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8B78E5241E18AFD100E2CB09 /* ThreadPlanGotoUser.cpp */; };
+		8B78E5281E18C51400E2CB09 /* ThreadPlanGotoUser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8B78E5241E18AFD100E2CB09 /* ThreadPlanGotoUser.cpp */; };
 		8C26C4261C3EA5F90031DF7C /* ThreadSanitizerRuntime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8C26C4241C3EA4340031DF7C /* ThreadSanitizerRuntime.cpp */; };
 		8C2D6A53197A1EAF006989C9 /* MemoryHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8C2D6A52197A1EAF006989C9 /* MemoryHistory.cpp */; };
 		8C2D6A5E197A250F006989C9 /* MemoryHistoryASan.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8C2D6A5A197A1FDC006989C9 /* MemoryHistoryASan.cpp */; };
@@ -1186,6 +1188,7 @@
 			dstPath = "$(DEVELOPER_INSTALL_DIR)/usr/share/man/man1";
 			dstSubfolderSpec = 0;
 			files = (
+				8B78E5261E18AFD200E2CB09 /* ThreadPlanGotoUser.cpp in CopyFiles */,
 				AF90106515AB7D3600FF120D /* lldb.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
@@ -2619,6 +2622,7 @@
 		6D9AB3DE1BB2B76B003F2289 /* TypeMap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TypeMap.h; path = include/lldb/Symbol/TypeMap.h; sourceTree = "<group>"; };
 		6DEC6F381BD66D750091ABA6 /* TaskPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TaskPool.cpp; path = source/Utility/TaskPool.cpp; sourceTree = "<group>"; };
 		6DEC6F3A1BD66D950091ABA6 /* TaskPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TaskPool.h; path = include/lldb/Utility/TaskPool.h; sourceTree = "<group>"; };
+		8B78E5241E18AFD100E2CB09 /* ThreadPlanGotoUser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadPlanGotoUser.cpp; path = source/Target/ThreadPlanGotoUser.cpp; sourceTree = "<group>"; };
 		8C26C4241C3EA4340031DF7C /* ThreadSanitizerRuntime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadSanitizerRuntime.cpp; path = ThreadSanitizer/ThreadSanitizerRuntime.cpp; sourceTree = "<group>"; };
 		8C26C4251C3EA4340031DF7C /* ThreadSanitizerRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadSanitizerRuntime.h; path = ThreadSanitizer/ThreadSanitizerRuntime.h; sourceTree = "<group>"; };
 		8C2D6A52197A1EAF006989C9 /* MemoryHistory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryHistory.cpp; path = source/Target/MemoryHistory.cpp; sourceTree = "<group>"; };
@@ -5320,6 +5324,7 @@
 				264D8D4F13661BD7003A368F /* UnwindAssembly.cpp */,
 				23F403471926C8D50046DC9B /* NativeRegisterContextRegisterInfo.h */,
 				23F403481926CC250046DC9B /* NativeRegisterContextRegisterInfo.cpp */,
+				8B78E5241E18AFD100E2CB09 /* ThreadPlanGotoUser.cpp */,
 			);
 			name = Target;
 			sourceTree = "<group>";
@@ -7027,6 +7032,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B78E5281E18C51400E2CB09 /* ThreadPlanGotoUser.cpp in Sources */,
 				33E5E8471A674FB60024ED68 /* StringConvert.cpp in Sources */,
 				2689FFDA13353D9D00698AC0 /* lldb.cpp in Sources */,
 				4C0083401B9F9BA900D5CF24 /* UtilityFunction.cpp in Sources */,

@@ -944,6 +944,9 @@ public:
                                  bool stop_other_threads);
 
   virtual lldb::ThreadPlanSP
+  QueueThreadPlanForGotoUser (bool abort_other_plans, bool stop_other_threads);
+
+  virtual lldb::ThreadPlanSP
   QueueThreadPlanForStepUntil(bool abort_other_plans,
                               lldb::addr_t *address_list, size_t num_addresses,
                               bool stop_others, uint32_t frame_idx);

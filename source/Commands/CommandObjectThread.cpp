@@ -633,6 +633,10 @@ protected:
       new_plan_sp = thread->QueueThreadPlanForStepScripted(
           abort_other_plans, m_options.m_class_name.c_str(),
           bool_stop_other_threads);
+    } else if (m_step_type == eStepTypeGotoUser) {
+      new_plan_sp = thread->QueueThreadPlanForStepScripted(
+              abort_other_plans, m_options.m_class_name.c_str(),
+              bool_stop_other_threads);
     } else {
       result.AppendError("step type is not supported");
       result.SetStatus(eReturnStatusFailed);
@@ -1965,6 +1969,13 @@ CommandObjectMultiwordThread::CommandObjectMultiwordThread(
                      "Instruction level single step, stepping into calls.  "
                      "Defaults to current thread unless specified.",
                      nullptr, eStepTypeTrace, eStepScopeInstruction)));
+
+    LoadSubCommand("goto-user",
+                 CommandObjectSP(new CommandObjectThreadStepWithTypeAndScope(
+                     interpreter, "thread goto-user",
+                     "Instruction level single step, stepping into user land.  "
+                     "Defaults to current thread unless specified.",
+                     nullptr, eStepTypeGotoUser, eStepScopeInstruction)));
 
   LoadSubCommand("step-inst-over",
                  CommandObjectSP(new CommandObjectThreadStepWithTypeAndScope(

@@ -49,8 +49,10 @@
 #include "lldb/Target/ThreadPlanStepOverRange.h"
 #include "lldb/Target/ThreadPlanStepThrough.h"
 #include "lldb/Target/ThreadPlanStepUntil.h"
+#include "lldb/Target/ThreadPlanGotoUser.h"
 #include "lldb/Target/ThreadSpec.h"
 #include "lldb/Target/Unwind.h"
+#include "lldb/Target/ThreadPlanGotoUser.h"
 
 using namespace lldb;
 using namespace lldb_private;
@@ -1358,6 +1360,15 @@ ThreadPlanSP Thread::QueueThreadPlanForStepOverRange(
       abort_other_plans, line_entry.GetSameLineContiguousAddressRange(),
       addr_context, stop_other_threads,
       step_out_avoids_code_withoug_debug_info);
+}
+
+ThreadPlanSP
+Thread::QueueThreadPlanForGotoUser (bool abort_other_plans, bool stop_other_threads)
+{
+ ThreadPlanSP thread_plan_sp(new ThreadPlanGotoUser(
+      *this, false, stop_other_threads, eVoteNoOpinion, eVoteNoOpinion));
+  QueueThreadPlan(thread_plan_sp, abort_other_plans);
+  return thread_plan_sp;
 }
 
 ThreadPlanSP Thread::QueueThreadPlanForStepInRange(
