@@ -634,9 +634,8 @@ protected:
           abort_other_plans, m_options.m_class_name.c_str(),
           bool_stop_other_threads);
     } else if (m_step_type == eStepTypeGotoUser) {
-      new_plan_sp = thread->QueueThreadPlanForStepScripted(
-              abort_other_plans, m_options.m_class_name.c_str(),
-              bool_stop_other_threads);
+      new_plan_sp = thread->QueueThreadPlanForGotoUser(
+              abort_other_plans, bool_stop_other_threads);
     } else {
       result.AppendError("step type is not supported");
       result.SetStatus(eReturnStatusFailed);

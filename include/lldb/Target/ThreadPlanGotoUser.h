@@ -40,6 +40,8 @@ namespace lldb_private {
         bool DoPlanExplainsStop(Event *event_ptr) override;
         
         void SetUpState();
+        bool GetMainModuleAddr();
+        lldb::addr_t GetModuleBaseAddr(size_t index);
         
     private:
         friend lldb::ThreadPlanSP Thread::QueueThreadPlanForStepSingleInstruction(
@@ -52,6 +54,10 @@ namespace lldb_private {
         bool m_start_has_symbol;
         StackID m_stack_id;
         StackID m_parent_frame_id;
+        time_t  m_start_time;
+        lldb::addr_t m_start_address;
+        lldb::addr_t m_end_address;
+        bool m_done;
         
         DISALLOW_COPY_AND_ASSIGN(ThreadPlanGotoUser);
     };

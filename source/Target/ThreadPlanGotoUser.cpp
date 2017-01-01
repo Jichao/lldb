@@ -14,6 +14,8 @@
 #include "lldb/Target/ThreadPlanGotoUser.h"
 #include "lldb/Core/Log.h"
 #include "lldb/Core/Stream.h"
+#include "lldb/core/Module.h"
+#include "lldb/core/Section.h"
 #include "lldb/Target/Process.h"
 #include "lldb/Target/RegisterContext.h"
 #include "lldb/Target/RegisterContext.h"
@@ -32,11 +34,15 @@ ThreadPlanGotoUser::ThreadPlanGotoUser(Thread &thread,
                                                      Vote stop_vote,
                                                      Vote run_vote)
 : ThreadPlan(ThreadPlan::eKindGotoUser,
-             "Step over single instruction", thread, stop_vote, run_vote),
+             "step util user land", thread, stop_vote, run_vote),
 m_instruction_addr(0), m_stop_other_threads(stop_other_threads),
 m_step_over(step_over) {
+    m_start_time = time(NULL);
     m_takes_iteration_count = true;
     SetUpState();
+    m_start_address = 0;
+    m_end_address = 0;
+    m_done = false;
 }
 
 ThreadPlanGotoUser::~ThreadPlanGotoUser() = default;
@@ -108,118 +114,52 @@ bool ThreadPlanGotoUser::IsPlanStale() {
     }
 }
 
-bool ThreadPlanGotoUser::ShouldStop(Event *event_ptr) {
-    if (m_step_over) {
-        Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_STEP));
-        
-        StackFrameSP cur_frame_sp = m_thread.GetStackFrameAtIndex(0);
-        if (!cur_frame_sp) {
-            if (log)
-                log->Printf(
-                            "ThreadPlanGotoUser couldn't get the 0th frame, stopping.");
-            SetPlanComplete();
-            return true;
-        }
-        
-        StackID cur_frame_zero_id = cur_frame_sp->GetStackID();
-        
-        if (cur_frame_zero_id == m_stack_id || m_stack_id < cur_frame_zero_id) {
-            if (m_thread.GetRegisterContext()->GetPC(0) != m_instruction_addr) {
-                if (--m_iteration_count <= 0) {
-                    SetPlanComplete();
-                    return true;
-                } else {
-                    // We are still stepping, reset the start pc, and in case we've
-                    // stepped out,
-                    // reset the current stack id.
-                    SetUpState();
-                    return false;
-                }
-            } else
-                return false;
-        } else {
-            // We've stepped in, step back out again:
-            StackFrame *return_frame = m_thread.GetStackFrameAtIndex(1).get();
-            if (return_frame) {
-                if (return_frame->GetStackID() != m_parent_frame_id ||
-                    m_start_has_symbol) {
-                    // next-instruction shouldn't step out of inlined functions.  But we
-                    // may have stepped into a
-                    // real function that starts with an inlined function, and we do want
-                    // to step out of that...
-                    
-                    if (cur_frame_sp->IsInlined()) {
-                        StackFrameSP parent_frame_sp =
-                        m_thread.GetFrameWithStackID(m_stack_id);
-                        
-                        if (parent_frame_sp &&
-                            parent_frame_sp->GetConcreteFrameIndex() ==
-                            cur_frame_sp->GetConcreteFrameIndex()) {
-                            SetPlanComplete();
-                            if (log) {
-                                log->Printf("Frame we stepped into is inlined into the frame "
-                                            "we were stepping from, stopping.");
-                            }
-                            return true;
-                        }
-                    }
-                    
-                    if (log) {
-                        StreamString s;
-                        s.PutCString("Stepped in to: ");
-                        addr_t stop_addr =
-                        m_thread.GetStackFrameAtIndex(0)->GetRegisterContext()->GetPC();
-                        s.Address(stop_addr, m_thread.CalculateTarget()
-                                  ->GetArchitecture()
-                                  .GetAddressByteSize());
-                        s.PutCString(" stepping out to: ");
-                        addr_t return_addr = return_frame->GetRegisterContext()->GetPC();
-                        s.Address(return_addr, m_thread.CalculateTarget()
-                                  ->GetArchitecture()
-                                  .GetAddressByteSize());
-                        log->Printf("%s.", s.GetData());
-                    }
-                    
-                    // GotoUser should probably have the tri-state RunMode, but for
-                    // now it is safer to
-                    // run others.
-                    const bool stop_others = false;
-                    m_thread.QueueThreadPlanForStepOutNoShouldStop(
-                                                                   false, nullptr, true, stop_others, eVoteNo, eVoteNoOpinion, 0);
-                    return false;
-                } else {
-                    if (log) {
-                        log->PutCString(
-                                        "The stack id we are stepping in changed, but our parent frame "
-                                        "did not when stepping from code with no symbols.  "
-                                        "We are probably just confused about where we are, stopping.");
-                    }
-                    SetPlanComplete();
-                    return true;
-                }
-            } else {
-                if (log)
-                    log->Printf("Could not find previous frame, stopping.");
-                SetPlanComplete();
-                return true;
-            }
-        }
-    } else {
-        lldb::addr_t pc_addr = m_thread.GetRegisterContext()->GetPC(0);
-        if (pc_addr != m_instruction_addr) {
-            if (--m_iteration_count <= 0) {
-                SetPlanComplete();
-                return true;
-            } else {
-                // We are still stepping, reset the start pc, and in case we've stepped
-                // in or out,
-                // reset the current stack id.
-                SetUpState();
-                return false;
-            }
-        } else
-            return false;
+lldb::addr_t ThreadPlanGotoUser::GetModuleBaseAddr(size_t index) {
+    lldb::addr_t addr;
+    Target& target = m_thread.GetProcess()->GetTarget();
+    SectionList *section_list =
+            target.GetImages().GetModuleAtIndex(index)->GetSectionList();
+    addr = UINT64_MAX;
+    for (size_t i = 0; i < section_list->GetSize(); ++i) {
+        addr = std::min(addr, section_list->GetSectionAtIndex(i)->GetLoadBaseAddress(&target));
     }
+    return addr;
+}
+
+bool ThreadPlanGotoUser::GetMainModuleAddr() {
+    if (m_start_address || m_end_address)
+        return true;
+
+    m_start_address = GetModuleBaseAddr(0);
+    m_end_address = GetModuleBaseAddr(1);
+    printf("start address : 0x%" PRIx64  " end address: 0x%" PRIx64 "\n", m_start_address, m_end_address);
+    return true;
+}
+
+bool ThreadPlanGotoUser::ShouldStop(Event *event_ptr) {
+    lldb::addr_t pc_addr = m_thread.GetRegisterContext()->GetPC(0);
+    GetMainModuleAddr();
+    if (pc_addr >= m_start_address && pc_addr <= m_end_address) {
+        if (!m_done) {
+            printf("goto user time consumed : %li s\n", time(NULL) - m_start_time);
+            m_done = true;
+        }
+        SetPlanComplete();
+        return true;
+    }
+    return false;
+
+//    lldb::addr_t pc_addr = m_thread.GetRegisterContext()->GetPC(0);
+//    std::unique_ptr<lldb_private::Address> addr(new lldb_private::Address());
+//    Target& target = m_thread.GetProcess()->GetTarget();
+//    addr->SetLoadAddress(pc_addr, &target);
+//
+//    if (addr->GetModule() == target.GetImages().GetModuleAtIndex(0)) {
+//        printf("goto user time consumed : %li s\n", time(NULL) - m_start_time);
+//        SetPlanComplete();
+//        return true;
+//    }
+    return false;
 }
 
 bool ThreadPlanGotoUser::StopOthers() { return m_stop_other_threads; }
